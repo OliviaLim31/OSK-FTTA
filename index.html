@@ -1,0 +1,1548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Submission and gallery portal for OSK Group IT's From Task to Agent build day. Static prototype.">
+<title>From Task to Agent Portal</title>
+<style>
+  /* Document reset (supplied by the Artifact host in the hosted version). */
+  :root {
+    color-scheme: light dark;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<style>
+  /* ============================================================
+     Tokens — lifted from gcc-at.oskgroup.com/from-task-to-agent/
+     so the portal reads as the same product as the landing page.
+     ============================================================ */
+  :root {
+    --navy: #1d174e;
+    --navy-deep: #100d35;
+    --ink: #201c38;
+    --muted: #676378;
+    --purple: #7045ce;
+    --purple-bright: #a781fb;
+    --cyan: #a7eaff;
+    --lavender: #eee8fc;
+    --cream: #fbfafc;
+    --line: #e5e1ee;
+
+    --bg: var(--cream);
+    --surface: #ffffff;
+    --surface-2: #f5f3fa;
+    --text: var(--ink);
+    --text-strong: var(--navy);
+    --text-muted: var(--muted);
+    --border: var(--line);
+    --accent: var(--purple);
+    --accent-soft: var(--lavender);
+    --on-accent: #ffffff;
+
+    /* semantic — deliberately outside the purple accent family */
+    --ok: #17795e;
+    --ok-soft: #dcf2ea;
+    --warn: #8a5a00;
+    --warn-soft: #fdf0d5;
+    --stop: #a32747;
+    --stop-soft: #fbe3e9;
+
+    --max-width: 1200px;
+    --radius: 12px;
+    --ease: cubic-bezier(.2,.7,.2,1);
+    --font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0a26;
+      --surface: #171339;
+      --surface-2: #1f1a47;
+      --text: #ece9f7;
+      --text-strong: #ffffff;
+      --text-muted: #a49fc0;
+      --border: #2e2860;
+      --accent: var(--purple-bright);
+      --accent-soft: #2a2160;
+      --on-accent: #17102e;
+      --ok: #62d3ae;
+      --ok-soft: #123c32;
+      --warn: #e0b45f;
+      --warn-soft: #3d2f10;
+      --stop: #f491a9;
+      --stop-soft: #431825;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c0a26;
+    --surface: #171339;
+    --surface-2: #1f1a47;
+    --text: #ece9f7;
+    --text-strong: #ffffff;
+    --text-muted: #a49fc0;
+    --border: #2e2860;
+    --accent: var(--purple-bright);
+    --accent-soft: #2a2160;
+    --on-accent: #17102e;
+    --ok: #62d3ae;
+    --ok-soft: #123c32;
+    --warn: #e0b45f;
+    --warn-soft: #3d2f10;
+    --stop: #f491a9;
+    --stop-soft: #431825;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: 20px;
+  }
+
+  h1, h2, h3, h4 { color: var(--text-strong); margin: 0; text-wrap: balance; }
+  h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 750; letter-spacing: -0.052em; line-height: 1.04; }
+  h2 { font-size: clamp(22px, 3vw, 30px); font-weight: 650; letter-spacing: -0.045em; line-height: 1.12; }
+  h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
+  p { margin: 0; }
+  a { color: inherit; }
+
+  .eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+  }
+
+  :where(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* ---------- POC control bar (not part of the product) ---------- */
+  .topbar {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 40;
+  }
+  .poc {
+    background: var(--navy-deep);
+    color: #cfc7f0;
+    border-bottom: 1px solid #2e2860;
+  }
+  .poc-inner {
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding: 9px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px 18px;
+    flex-wrap: wrap;
+  }
+  .poc-tag {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    white-space: nowrap;
+  }
+  .poc-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .poc-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8e86bb;
+    margin-right: 1px;
+  }
+  .seg {
+    display: inline-flex;
+    background: #241e57;
+    border-radius: 999px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .seg button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #b6adde;
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .18s var(--ease), color .18s var(--ease);
+    white-space: nowrap;
+  }
+  .seg button:hover { color: #fff; }
+  .seg button[aria-pressed="true"] { background: var(--purple-bright); color: #1a1140; }
+
+  /* ---------- Site chrome ---------- */
+  .site-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .site-header-inner {
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: baseline; gap: 8px; margin-right: auto; }
+  .brand-mark { font-size: 17px; font-weight: 750; letter-spacing: -0.03em; color: #b4802f; }
+  .brand-mark span { color: var(--text-strong); }
+  .brand-sub {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-left: 1px solid var(--border);
+    padding-left: 8px;
+  }
+  nav.main { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav.main button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 7px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .18s var(--ease), color .18s var(--ease);
+  }
+  nav.main button:hover { background: var(--surface-2); color: var(--text-strong); }
+  nav.main button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+  .who {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    padding-left: 14px;
+    border-left: 1px solid var(--border);
+  }
+  .who strong { color: var(--text-strong); font-weight: 650; }
+
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--on-accent);
+    background: var(--accent);
+    flex: none;
+  }
+
+  /* ---------- Page head ---------- */
+  .page-head {
+    padding-block: 40px 28px;
+    display: grid;
+    gap: 14px;
+    position: relative;
+  }
+  .page-head > *:not(.hero-fx) { position: relative; z-index: 1; }
+  .page-head p.lede {
+    color: var(--text-muted);
+    font-size: 16px;
+    max-width: 58ch;
+  }
+
+  /* ---------- The primary action: submitting ---------- */
+  .cta-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 10px;
+  }
+  .entry-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .entry-status strong { color: var(--text-strong); font-weight: 650; }
+
+  .header-cta { margin-left: 2px; }
+
+  .cta-band {
+    margin-top: 40px;
+    background: var(--navy);
+    border-radius: var(--radius);
+    padding: 30px 28px;
+    display: flex;
+    align-items: center;
+    gap: 18px 28px;
+    flex-wrap: wrap;
+  }
+  .cta-band .copy { display: grid; gap: 7px; max-width: 46ch; }
+  .cta-band h2 { color: #fff; font-size: clamp(20px, 2.6vw, 27px); }
+  .cta-band p { color: #b6afd6; font-size: 14.5px; }
+  .cta-band .eyebrow { color: var(--cyan); }
+  .cta-band .btn-primary { background: var(--cyan); color: var(--navy-deep); margin-left: auto; }
+  .cta-band .btn-primary:hover { background: #fff; }
+  .cta-band .btn:disabled { background: #372f74; color: #9a92c4; }
+
+  .meta-row {
+    display: flex;
+    gap: 10px 30px;
+    flex-wrap: wrap;
+    padding-top: 6px;
+  }
+  .meta {
+    display: grid;
+    gap: 1px;
+  }
+  .meta dt {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .meta dd {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 650;
+    color: var(--text-strong);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Phase banner ---------- */
+  .phase-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 11px 15px;
+    font-size: 13.5px;
+    color: var(--text-strong);
+    margin-bottom: 26px;
+  }
+  .phase-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); flex: none;
+  }
+  .phase-bar .spacer { margin-left: auto; }
+  .phase-bar .deadline { color: var(--text-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Filters ---------- */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .section-head h2 { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-strong); }
+  .section-head .count { font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+
+  .filters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 22px; }
+  .chip {
+    appearance: none;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all .18s var(--ease);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip[aria-pressed="true"] {
+    background: var(--text-strong);
+    border-color: var(--text-strong);
+    color: var(--bg);
+  }
+
+  /* ---------- Cards ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+    transition: border-color .2s var(--ease), transform .2s var(--ease);
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card-thumb {
+    aspect-ratio: 16 / 10;
+    max-width: 100%;
+    position: relative;
+    display: block;
+  }
+  .card-thumb svg { width: 100%; height: 100%; display: block; }
+  .ribbon {
+    position: absolute;
+    top: 9px; left: 9px;
+    background: var(--navy);
+    color: var(--cyan);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+  .ribbon.runner { background: var(--surface); color: var(--text-strong); border: 1px solid var(--border); }
+  .card-body { padding: 14px 15px 0; display: grid; gap: 7px; }
+  .card-bu {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .card-tagline {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-clamp: 3;
+    overflow: hidden;
+  }
+  .card-foot {
+    margin-top: auto;
+    padding: 13px 15px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border-top: 1px solid var(--border);
+  }
+  .stack { display: flex; }
+  .stack .avatar { width: 24px; height: 24px; font-size: 9px; border: 2px solid var(--surface); }
+  .stack .avatar + .avatar { margin-left: -8px; }
+  .team-note { font-size: 11.5px; color: var(--text-muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  /* avatar hue variants — derived from the brand family */
+  .a0 { background: var(--purple); }
+  .a1 { background: var(--navy); }
+  .a2 { background: #4b6fb8; }
+  .a3 { background: #8a5fd6; }
+  .a4 { background: #35507e; }
+
+  /* ---------- Empty state ---------- */
+  .empty {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 46px 24px;
+    text-align: center;
+    display: grid;
+    gap: 9px;
+    justify-items: center;
+    background: var(--surface);
+  }
+  .empty p { color: var(--text-muted); max-width: 44ch; font-size: 14px; }
+
+  /* ---------- Winners ---------- */
+  .winners-band {
+    background: var(--navy);
+    border-radius: var(--radius);
+    padding: 26px 24px 28px;
+    margin-bottom: 34px;
+  }
+  .winners-band .section-head { border-bottom-color: #342d6d; }
+  .winners-band .section-head h2 { color: #fff; }
+  .winners-band .section-head .count { color: #a49fc0; }
+  .winners-band .eyebrow { color: var(--cyan); }
+  .winners-band .card { background: #241e57; border-color: #372f74; }
+  .winners-band .card h3 { color: #fff; }
+  .winners-band .card-tagline { color: #b6afd6; }
+  .winners-band .card-bu { color: var(--cyan); }
+  .winners-band .card-foot { border-top-color: #372f74; }
+  .winners-band .team-note { color: #9a92c4; }
+  .winners-band .stack .avatar { border-color: #241e57; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    appearance: none;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 650;
+    border-radius: 999px;
+    padding: 11px 22px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    transition: all .18s var(--ease);
+  }
+  .btn-primary { background: var(--accent); color: var(--on-accent); }
+  .btn-primary:hover { background: var(--text-strong); }
+  .btn-ghost { background: transparent; color: var(--text-strong); border-color: var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-sm { font-size: 12.5px; padding: 6px 13px; }
+
+  /* ---------- Forms ---------- */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 26px 24px;
+    display: grid;
+    gap: 20px;
+    max-width: 760px;
+  }
+  .field { display: grid; gap: 6px; }
+  .field label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-strong);
+  }
+  .field .hint { font-size: 12.5px; color: var(--text-muted); }
+  .field input, .field textarea, .field select {
+    font: inherit;
+    font-size: 14.5px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    width: 100%;
+  }
+  .field textarea { min-height: 96px; resize: vertical; }
+  .field input:disabled, .field textarea:disabled, .field select:disabled {
+    opacity: .6; cursor: not-allowed;
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .prefilled {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ok);
+    background: var(--ok-soft);
+    border-radius: 6px;
+    padding: 5px 10px;
+    width: fit-content;
+  }
+  .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .dropzone {
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 22px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    background: var(--bg);
+  }
+
+  /* ---------- Admin table ---------- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; }
+  th, td { text-align: left; padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); background: var(--surface-2); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td .t-title { font-weight: 650; color: var(--text-strong); letter-spacing: -0.01em; }
+  td .t-sub { font-size: 12px; color: var(--text-muted); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .pill::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .p-approved { background: var(--ok-soft); color: var(--ok); }
+  .p-submitted { background: var(--warn-soft); color: var(--warn); }
+  .p-rejected { background: var(--stop-soft); color: var(--stop); }
+  .p-draft { background: var(--surface-2); color: var(--text-muted); }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  details.spec {
+    margin-top: 22px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 14px 18px;
+  }
+  details.spec summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-strong);
+  }
+  details.spec p { font-size: 13.5px; color: var(--text-muted); margin-block: 10px; max-width: 62ch; }
+  pre {
+    overflow-x: auto;
+    background: var(--navy-deep);
+    color: #d6cff5;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+    margin: 0;
+  }
+  pre .k { color: var(--cyan); }
+  pre .c { color: #8d85b8; font-style: italic; }
+
+  /* ---------- Detail dialog ---------- */
+  dialog {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    padding: 0;
+    max-width: 560px;
+    width: calc(100% - 32px);
+  }
+  dialog::backdrop { background: rgba(16, 13, 53, .55); }
+  .dlg-head { padding: 22px 24px 16px; display: grid; gap: 8px; }
+  .dlg-body { padding: 0 24px 20px; display: grid; gap: 14px; }
+  .dlg-body p { font-size: 14px; color: var(--text-muted); }
+  .dlg-foot { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+  footer.site {
+    border-top: 1px solid var(--border);
+    margin-top: 56px;
+    padding-block: 26px 40px;
+  }
+  footer.site .wrap { display: flex; gap: 10px 24px; flex-wrap: wrap; align-items: center; }
+  footer.site p { font-size: 12.5px; color: var(--text-muted); }
+
+  main { padding-bottom: 20px; }
+
+  @media (max-width: 620px) {
+    .field-row { grid-template-columns: 1fr; }
+    .who { padding-left: 0; border-left: 0; }
+    .page-head { padding-block: 28px 20px; }
+  }
+
+  /* ============================================================
+     MOTION
+     One entrance sequence, one parallax field, restrained hovers.
+     Everything below is disabled under prefers-reduced-motion.
+     ============================================================ */
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Entrance: the hero resolves top to bottom in just over half a second. */
+  .page-head > *:not(.hero-fx) {
+    animation: rise .5s var(--ease) backwards;
+  }
+  .page-head > *:nth-child(2) { animation-delay: .04s; }
+  .page-head > *:nth-child(3) { animation-delay: .10s; }
+  .page-head > *:nth-child(4) { animation-delay: .17s; }
+  .page-head > *:nth-child(5) { animation-delay: .24s; }
+  .page-head > *:nth-child(6) { animation-delay: .30s; }
+  .hero-fx { animation: fade .9s var(--ease) backwards; }
+
+  /* Cards deal in rather than appearing as a block. Re-runs on every filter change. */
+  .card {
+    animation: rise .42s var(--ease) backwards;
+    animation-delay: calc(var(--i, 0) * 38ms);
+  }
+
+  /* ---- Parallax field ---- */
+  .hero-fx {
+    position: absolute;
+    inset: -30px -24px 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 18px;
+  }
+  .hero-fx .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(46px);
+    will-change: transform;
+  }
+  .hero-fx .orb-1 {
+    width: 360px; height: 360px;
+    right: -60px; top: -90px;
+    background: radial-gradient(circle at 38% 38%, var(--purple-bright), transparent 70%);
+    opacity: .40;
+  }
+  .hero-fx .orb-2 {
+    width: 240px; height: 240px;
+    right: 210px; top: 90px;
+    background: radial-gradient(circle at 50% 50%, var(--cyan), transparent 68%);
+    opacity: .38;
+  }
+  .hero-fx .motif {
+    position: absolute;
+    right: 46px; top: 54px;
+    width: 250px;
+    will-change: transform;
+    opacity: .5;
+  }
+  .hero-fx .motif line, .hero-fx .motif circle { stroke: var(--purple); fill: var(--purple); }
+
+  .band-fx {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    border-radius: var(--radius);
+  }
+  .band-fx .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(50px);
+    will-change: transform;
+  }
+  .cta-band, .winners-band { position: relative; overflow: hidden; }
+  .cta-band > *, .winners-band > * { position: relative; z-index: 1; }
+  .cta-band .band-fx .orb-a {
+    width: 300px; height: 300px; right: 8%; top: -140px;
+    background: radial-gradient(circle, var(--purple-bright), transparent 68%); opacity: .5;
+  }
+  .cta-band .band-fx .orb-b {
+    width: 200px; height: 200px; left: 4%; bottom: -130px;
+    background: radial-gradient(circle, var(--cyan), transparent 68%); opacity: .28;
+  }
+  .winners-band .band-fx .orb-a {
+    width: 340px; height: 340px; right: -60px; top: -170px;
+    background: radial-gradient(circle, var(--purple), transparent 70%); opacity: .55;
+  }
+
+  @media (max-width: 760px) {
+    .hero-fx .motif { display: none; }
+    .hero-fx .orb-1 { width: 240px; height: 240px; right: -80px; }
+    .hero-fx .orb-2 { display: none; }
+  }
+
+  /* ---- Micro-interactions ---- */
+  .card-thumb { overflow: hidden; }
+  .card-thumb svg { transition: transform .55s var(--ease); }
+  .card:hover .card-thumb svg { transform: scale(1.055); }
+  .card:active { transform: translateY(-1px); }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .chip:active { transform: translateY(1px); }
+  .site-header, .phase-bar, .cta-band { transition: background .3s var(--ease), border-color .3s var(--ease); }
+  dialog[open] { animation: rise .28s var(--ease); }
+  dialog::backdrop { animation: fade .28s var(--ease); }
+
+  /* ---- View transitions between Gallery / Submit / Review ---- */
+  .topbar { view-transition-name: topbar; }
+  @keyframes vt-out { to   { opacity: 0; transform: translateY(-8px); } }
+  @keyframes vt-in  { from { opacity: 0; transform: translateY(14px); } }
+  ::view-transition-old(root) { animation: vt-out .16s var(--ease) both; }
+  ::view-transition-new(root) { animation: vt-in  .34s var(--ease) both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+    .hero-fx, .band-fx { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <!-- ============ POC control bar ============ -->
+  <div class="poc">
+    <div class="poc-inner">
+      <span class="poc-tag">Prototype controls</span>
+      <div class="poc-group">
+        <span class="poc-label">Signed in as</span>
+        <div class="seg" id="role-seg">
+          <button type="button" data-role="new" aria-pressed="true">OSKer · no entry yet</button>
+          <button type="button" data-role="entered" aria-pressed="false">OSKer · already entered</button>
+          <button type="button" data-role="admin" aria-pressed="false">Organiser</button>
+        </div>
+      </div>
+      <div class="poc-group">
+        <span class="poc-label">Stage</span>
+        <div class="seg" id="phase-seg">
+          <button type="button" data-phase="open" aria-pressed="true">Submissions open</button>
+          <button type="button" data-phase="judging" aria-pressed="false">Judging</button>
+          <button type="button" data-phase="results" aria-pressed="false">Results out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Site header ============ -->
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="brand">
+        <span class="brand-mark">OSK <span>Group</span></span>
+        <span class="brand-sub">From Task to Agent</span>
+      </div>
+      <nav class="main" id="nav">
+        <button type="button" data-view="gallery" aria-current="page">Gallery</button>
+        <button type="button" data-view="submit" hidden>My submission</button>
+        <button type="button" data-view="admin" hidden>Review queue</button>
+      </nav>
+      <button type="button" class="btn btn-primary btn-sm header-cta" id="header-cta" data-go-submit></button>
+      <div class="who" id="who"></div>
+    </div>
+  </header>
+</div>
+
+<main>
+  <!-- ============ GALLERY ============ -->
+  <section id="view-gallery">
+    <div class="wrap">
+      <div class="page-head">
+        <div class="hero-fx" aria-hidden="true">
+          <span class="orb orb-1" data-speed="0.30"></span>
+          <span class="orb orb-2" data-speed="-0.22"></span>
+          <svg class="motif" viewBox="0 0 250 90" data-speed="0.46" aria-hidden="true">
+            <line x1="24" y1="58" x2="112" y2="30" stroke-width="1.5" stroke-linecap="round" opacity=".5"></line>
+            <line x1="112" y1="30" x2="220" y2="62" stroke-width="1.5" stroke-linecap="round" opacity=".5"></line>
+            <circle cx="24" cy="58" r="7" opacity=".65"></circle>
+            <circle cx="112" cy="30" r="11"></circle>
+            <circle cx="220" cy="62" r="7" opacity=".65"></circle>
+          </svg>
+        </div>
+        <span class="eyebrow">Build day showcase</span>
+        <h1>Every use case,<br>built by an OSKer.</h1>
+        <p class="lede">One task from one function, turned into a working agent. Browse what the Group built — and add yours before submissions close.</p>
+        <div class="cta-row" id="hero-cta"></div>
+        <dl class="meta-row" id="meta-row"></dl>
+      </div>
+
+      <div class="phase-bar" id="phase-bar"></div>
+
+      <div id="winners-slot"></div>
+
+      <div class="section-head">
+        <h2 id="grid-heading">All submissions</h2>
+        <span class="count" id="grid-count"></span>
+      </div>
+
+      <div class="filters" id="filters"></div>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="empty" hidden>
+        <span class="eyebrow">Nothing here yet</span>
+        <h3>The gallery fills up as teams submit.</h3>
+        <p>Be the first to put your function's use case on the board.</p>
+        <button type="button" class="btn btn-primary" data-go-submit>Submit your agent ↗</button>
+      </div>
+
+      <div class="cta-band" id="cta-band"></div>
+    </div>
+  </section>
+
+  <!-- ============ SUBMIT ============ -->
+  <section id="view-submit" hidden>
+    <div class="wrap">
+      <div class="page-head">
+        <div class="hero-fx" aria-hidden="true">
+          <span class="orb orb-1" data-speed="0.26"></span>
+          <span class="orb orb-2" data-speed="-0.18"></span>
+        </div>
+        <span class="eyebrow">Your entry</span>
+        <h1>Tell us what you built.</h1>
+        <p class="lede">Describe the task you started from and what your agent does with it. You can come back and edit any of this until submissions close.</p>
+      </div>
+
+      <div class="phase-bar" id="submit-phase-bar"></div>
+
+      <form class="form-card" id="submission-form" novalidate>
+        <div class="field">
+          <label for="f-submitter">Submitted by</label>
+          <input id="f-submitter" name="submitter" value="Nurul Izzati binti Kamal — Group Human Resources" disabled>
+          <span class="prefilled">Taken from your OSK sign-in</span>
+        </div>
+
+        <div class="field">
+          <label for="f-title">Agent name</label>
+          <input id="f-title" name="title" placeholder="Policy Desk" value="Leave Triage">
+        </div>
+
+        <div class="field">
+          <label for="f-tagline">One-line summary</label>
+          <input id="f-tagline" name="tagline" maxlength="140" value="Reads leave requests against team coverage rules and surfaces only the clashes that need a manager's call.">
+          <span class="hint">Shown under the title on the gallery card. 140 characters.</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="f-bu">Function it serves</label>
+            <select id="f-bu" name="businessUnit">
+              <option>People &amp; HR</option>
+              <option>Finance</option>
+              <option>Operations</option>
+              <option>Risk &amp; Compliance</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-team">Team members</label>
+            <input id="f-team" name="team" value="Nurul Izzati, Danial Hakim">
+            <span class="hint">Search by name; pulled from the directory.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-problem">The task you started from</label>
+          <textarea id="f-problem" name="problem">Managers approve leave without visibility of who else on the team is already out that week, so clashes are only caught after the fact.</textarea>
+          <span class="hint">What happens today, how often, and where it breaks.</span>
+        </div>
+
+        <div class="field">
+          <label for="f-how">What the agent does</label>
+          <textarea id="f-how" name="how">Pulls the team roster and approved leave for the requested dates, applies the coverage rule for the function, then either clears the request or routes it to the manager with the clash spelled out.</textarea>
+          <span class="hint">Include where a human still makes the call.</span>
+        </div>
+
+        <div class="field">
+          <label for="f-demo">Demo link</label>
+          <input id="f-demo" name="demoUrl" placeholder="https://" value="https://teams.microsoft.com/...">
+          <span class="hint">A recording, a Teams link or a Copilot Studio share link.</span>
+        </div>
+
+        <div class="field">
+          <label for="f-thumb">Cover image</label>
+          <div class="dropzone" id="f-thumb">Drop a PNG or JPG here, or browse. Optional — a pattern is generated if you skip it.</div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="btn-submit">Submit entry</button>
+          <button type="button" class="btn btn-ghost" id="btn-draft">Save draft</button>
+          <span class="hint" id="submit-note" style="color:var(--text-muted);font-size:12.5px"></span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ ADMIN ============ -->
+  <section id="view-admin" hidden>
+    <div class="wrap">
+      <div class="page-head">
+        <div class="hero-fx" aria-hidden="true">
+          <span class="orb orb-1" data-speed="0.26"></span>
+        </div>
+        <span class="eyebrow">Organiser view</span>
+        <h1>Review queue.</h1>
+        <p class="lede">Approved entries appear in the gallery straight away. Awards stay hidden from everyone until you move the event to results.</p>
+        <dl class="meta-row" id="admin-meta"></dl>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Entry</th>
+              <th scope="col">Function</th>
+              <th scope="col">Status</th>
+              <th scope="col">Award</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-rows"></tbody>
+        </table>
+      </div>
+
+      <details class="spec">
+        <summary>Record shape for the build team</summary>
+        <p>This is the field set the prototype runs on. Whoever builds the SharePoint list or Dataverse table can take it as the starting schema — the front end reads exactly these keys.</p>
+        <pre><code>{
+  <span class="k">"id"</span>:            "sub-014",
+  <span class="k">"title"</span>:         "Leave Triage",
+  <span class="k">"tagline"</span>:       "Reads leave requests against team coverage rules…",
+  <span class="k">"businessUnit"</span>:  "People &amp; HR",      <span class="c">// fixed list of 4</span>
+  <span class="k">"problem"</span>:       "Managers approve leave without visibility…",
+  <span class="k">"how"</span>:           "Pulls the team roster and approved leave…",
+  <span class="k">"demoUrl"</span>:       "https://…",
+  <span class="k">"thumbnailUrl"</span>:  null,                 <span class="c">// null → generated pattern</span>
+  <span class="k">"submitter"</span>:     { "upn": "…@oskgroup.com", "name": "…" },
+  <span class="k">"team"</span>:          [ { "upn": "…", "name": "…" } ],
+  <span class="k">"status"</span>:        "submitted",          <span class="c">// draft | submitted | approved | rejected</span>
+  <span class="k">"award"</span>:         null,                 <span class="c">// null | winner | runner-up</span>
+  <span class="k">"submittedAt"</span>:   "2026-10-02T09:14:00+08:00",
+  <span class="k">"updatedAt"</span>:     "2026-10-02T09:14:00+08:00"
+}</code></pre>
+        <p>Two notes worth carrying over. <strong>award</strong> is null for every record until results day, which is what keeps the winners band off the gallery — no separate page, no redeploy. And <strong>status</strong> is what gates visibility: only <em>approved</em> records ever reach the public gallery.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p><strong>Prototype only.</strong> Sample entries and people are invented for layout purposes. No data is saved.</p>
+    <p style="margin-left:auto">From Task to Agent · OSK Group IT</p>
+  </div>
+</footer>
+
+<dialog id="detail">
+  <div class="dlg-head">
+    <span class="eyebrow" id="d-bu"></span>
+    <h2 id="d-title"></h2>
+  </div>
+  <div class="dlg-body">
+    <p id="d-tagline"></p>
+    <div>
+      <h3 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">The task it started from</h3>
+      <p id="d-problem"></p>
+    </div>
+    <div>
+      <h3 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">What the agent does</h3>
+      <p id="d-how"></p>
+    </div>
+    <div>
+      <h3 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">Team</h3>
+      <p id="d-team"></p>
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <button type="button" class="btn btn-ghost btn-sm" id="d-close">Close</button>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- Sample data (invented for the prototype) ----------
+  const BUS = ["People & HR", "Finance", "Operations", "Risk & Compliance"];
+
+  const DATA = [
+    { id:"s01", title:"Policy Desk", bu:"People & HR", status:"approved", award:"winner",
+      tagline:"Answers handbook questions in plain language and hands anything it cannot answer to the right HR owner.",
+      problem:"The HR inbox takes the same forty policy questions every month, and answers vary depending on who replies.",
+      how:"Searches the approved handbook, answers only where the policy is explicit, and routes anything ambiguous to the named policy owner with the question attached.",
+      team:[["Nurul Izzati","NI"],["Danial Hakim","DH"]] },
+
+    { id:"s02", title:"Invoice Matcher", bu:"Finance", status:"approved", award:"winner",
+      tagline:"Matches supplier invoices against purchase orders and delivery notes, escalating only the mismatches.",
+      problem:"Three-way matching is done by eye. Clean invoices take as long to check as broken ones.",
+      how:"Reads the invoice, pulls the matching PO and GRN, and clears anything that reconciles within tolerance. Everything else goes to a person with the variance highlighted.",
+      team:[["Wong Kai Ming","WK"],["Sarah Yap","SY"],["Amirul Syafiq","AS"]] },
+
+    { id:"s03", title:"Clause Checker", bu:"Risk & Compliance", status:"approved", award:"runner-up",
+      tagline:"Compares a draft contract against the standard clause library and lists every deviation for legal review.",
+      problem:"Legal reads every draft end to end to find the three clauses that were changed.",
+      how:"Diffs the draft against the approved template, categorises each deviation by risk, and produces a review list. Legal still decides on every item.",
+      team:[["Priya Nair","PN"],["Lim Chee Keong","LC"]] },
+
+    { id:"s04", title:"Site Report Reader", bu:"Operations", status:"approved", award:null,
+      tagline:"Turns daily site reports into one weekly summary of progress, delays and safety notes.",
+      problem:"Daily reports arrive as photos and free text. Nobody reads all of them, so delays surface late.",
+      how:"Extracts progress against programme, flags any delay reason that repeats across days, and separates safety observations into their own section for the weekly review.",
+      team:[["Tan Wei Sheng","TW"],["Chong Mei Ling","CM"]] },
+
+    { id:"s05", title:"Onboarding Runner", bu:"People & HR", status:"approved", award:null,
+      tagline:"Walks a new joiner through day-one setup and tells the manager what is still outstanding.",
+      problem:"New joiners chase four departments in their first week and managers only find out what is missing when something breaks.",
+      how:"Tracks each setup step, nudges the owner when a step stalls, and gives the manager one status view instead of four inboxes.",
+      team:[["Farah Adleen","FA"]] },
+
+    { id:"s06", title:"Month-End Chaser", bu:"Finance", status:"approved", award:null,
+      tagline:"Tracks outstanding month-end submissions by cost centre and nudges owners before the close deadline.",
+      problem:"Close slips because two or three cost centres are always late, and finding out who is late is itself a manual job.",
+      how:"Watches what has landed against what is expected, nudges the named owner on a schedule, and escalates to the controller only once the deadline has passed.",
+      team:[["Amirul Syafiq","AS"],["Wong Kai Ming","WK"]] },
+
+    { id:"s07", title:"Maintenance Router", bu:"Operations", status:"approved", award:null,
+      tagline:"Reads a tenant maintenance request, classifies how urgent it is and assigns the right contractor.",
+      problem:"Requests arrive by phone, email and WhatsApp, and triage depends on who picks them up.",
+      how:"Normalises the request into one format, classifies urgency against the SLA matrix, and assigns from the approved contractor list. Anything it scores as high-risk waits for a human.",
+      team:[["Chong Mei Ling","CM"],["Rajesh Kumar","RK"],["Tan Wei Sheng","TW"]] },
+
+    { id:"s08", title:"KYC Pre-Check", bu:"Risk & Compliance", status:"approved", award:null,
+      tagline:"Runs a first-pass completeness check on onboarding documents before a compliance officer picks them up.",
+      problem:"Officers spend the first ten minutes of every file finding out that a document is missing or expired.",
+      how:"Checks each required document is present, legible and in date, then hands the officer either a complete pack or a specific list of what to request.",
+      team:[["Lim Chee Keong","LC"],["Priya Nair","PN"]] },
+
+    { id:"s09", title:"Spend Explainer", bu:"Finance", status:"approved", award:null,
+      tagline:"Turns a cost-centre variance into a plain-language explanation with the underlying transactions attached.",
+      problem:"Budget holders ask why they are over, and someone has to go and reconstruct the answer from the ledger.",
+      how:"Identifies the transactions driving the variance, groups them by category, and writes the explanation the budget holder actually asked for.",
+      team:[["Sarah Yap","SY"]] },
+
+    { id:"s10", title:"Vendor Intake", bu:"Operations", status:"approved", award:null,
+      tagline:"Collects vendor onboarding documents, checks them for completeness and hands procurement a clean pack.",
+      problem:"Vendor packs come in incomplete and bounce back and forth two or three times before procurement can start.",
+      how:"Guides the vendor through each required document, validates format and expiry on upload, and only notifies procurement once the pack is whole.",
+      team:[["Rajesh Kumar","RK"],["Farah Adleen","FA"]] },
+
+    { id:"s11", title:"Incident Log Summariser", bu:"Risk & Compliance", status:"submitted", award:null,
+      tagline:"Turns raw incident logs into a trend summary for the monthly risk committee.",
+      problem:"The committee pack is assembled by hand from logs that were never written to be read together.",
+      how:"Groups incidents by cause and location, compares against the previous three months, and drafts the trend section for the risk officer to check and sign.",
+      team:[["Priya Nair","PN"]] },
+
+    { id:"s12", title:"Leave Triage", bu:"People & HR", status:"submitted", award:null,
+      tagline:"Reads leave requests against team coverage rules and surfaces only the clashes that need a manager's call.",
+      problem:"Managers approve leave without visibility of who else on the team is already out that week.",
+      how:"Pulls the roster and approved leave for the dates requested, applies the coverage rule for the function, then clears the request or routes it with the clash spelled out.",
+      team:[["Nurul Izzati","NI"],["Danial Hakim","DH"]] },
+
+    { id:"s13", title:"Contract Renewal Watch", bu:"Finance", status:"rejected", award:null,
+      tagline:"Flags contracts approaching auto-renewal so the business can decide before the window closes.",
+      problem:"Auto-renewals pass unnoticed and the Group pays for another year of something it stopped using.",
+      how:"Reads renewal dates and notice periods, then raises each one with the contract owner ahead of the notice deadline.",
+      team:[["Wong Kai Ming","WK"]] },
+
+    { id:"s14", title:"Shift Handover Notes", bu:"Operations", status:"draft", award:null,
+      tagline:"Compiles a shift handover from the day's logs so nothing is lost between teams.",
+      problem:"Handover is verbal, so whatever the outgoing shift forgets to mention simply disappears.",
+      how:"Assembles the shift's open items, incidents and outstanding checks into one note for the incoming supervisor to confirm.",
+      team:[["Tan Wei Sheng","TW"]] }
+  ];
+
+  // ---------- Thumbnail: the ASK → ACT → CHECK motif from the landing page ----------
+  const HUES = { "People & HR": 262, "Finance": 218, "Operations": 196, "Risk & Compliance": 280 };
+
+  function thumb(item, dark) {
+    const h = HUES[item.bu];
+    const seed = item.id.charCodeAt(1) + item.id.charCodeAt(2);
+    const lift = seed % 3;
+    const c1 = `hsl(${h} ${dark ? 48 : 62}% ${dark ? 22 : 92}%)`;
+    const c2 = `hsl(${h + 18} ${dark ? 52 : 70}% ${dark ? 30 : 86}%)`;
+    const node = `hsl(${h} ${dark ? 62 : 52}% ${dark ? 72 : 42}%)`;
+    const faint = `hsl(${h} ${dark ? 40 : 40}% ${dark ? 48 : 68}%)`;
+    const ys = [46, 34, 58];
+    const p = [0, 1, 2].map(i => ({ x: 42 + i * 58, y: ys[(i + lift) % 3] }));
+    const path = `M${p[0].x} ${p[0].y} L${p[1].x} ${p[1].y} L${p[2].x} ${p[2].y}`;
+    return `<svg viewBox="0 0 200 125" role="img" aria-label="${item.bu} use case">
+      <defs><linearGradient id="g${item.id}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/>
+      </linearGradient></defs>
+      <rect width="200" height="125" fill="url(#g${item.id})"/>
+      <circle cx="166" cy="26" r="30" fill="${faint}" opacity="${dark ? .18 : .24}"/>
+      <path d="${path}" fill="none" stroke="${node}" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
+      ${p.map((q, i) => `<circle cx="${q.x}" cy="${q.y}" r="${i === 1 ? 9 : 6}" fill="${node}" opacity="${i === 1 ? 1 : .75}"/>`).join("")}
+      <rect x="42" y="96" width="${34 + (seed % 5) * 14}" height="4" rx="2" fill="${node}" opacity=".45"/>
+      <rect x="42" y="106" width="${22 + (seed % 3) * 11}" height="4" rx="2" fill="${node}" opacity=".28"/>
+    </svg>`;
+  }
+
+  // ---------- State ----------
+  const state = { role: "new", phase: "open", view: "gallery", filter: "All" };
+
+  const $ = (id) => document.getElementById(id);
+  const isDark = () => {
+    const t = document.documentElement.getAttribute("data-theme");
+    if (t) return t === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+
+  const PHASES = {
+    open: {
+      label: "Submissions are open",
+      note: "Entries appear here as they are approved.",
+      deadline: "Closes Friday, 9 October · 6:00 PM"
+    },
+    judging: {
+      label: "Submissions closed — judging in progress",
+      note: "Entries are locked. Awards are not public yet.",
+      deadline: "Results announced 16 October"
+    },
+    results: {
+      label: "Results are out",
+      note: "Winners are published below.",
+      deadline: "Announced 16 October"
+    }
+  };
+
+  // Which entries the public gallery can see
+  function publicEntries() {
+    let rows = DATA.filter(d => d.status === "approved");
+    if (state.phase === "open") rows = rows.slice(0, 7); // fewer entries mid-submission
+    return rows;
+  }
+  function awardsVisible() { return state.phase === "results"; }
+
+  // ---------- Renderers ----------
+  function avatars(team) {
+    return `<div class="stack">${team.map((m, i) =>
+      `<span class="avatar a${i % 5}" title="${m[0]}">${m[1]}</span>`).join("")}</div>`;
+  }
+
+  function cardHTML(item, i = 0) {
+    const showAward = awardsVisible() && item.award;
+    const ribbon = showAward
+      ? `<span class="ribbon${item.award === "runner-up" ? " runner" : ""}">${item.award === "winner" ? "Winner" : "Runner-up"}</span>`
+      : "";
+    // cap the stagger so a long grid never keeps the reader waiting
+    return `<button type="button" class="card" data-id="${item.id}" style="--i:${Math.min(i, 9)}">
+      <span class="card-thumb">${thumb(item, isDark())}${ribbon}</span>
+      <span class="card-body">
+        <span class="card-bu">${item.bu}</span>
+        <h3>${item.title}</h3>
+        <span class="card-tagline">${item.tagline}</span>
+      </span>
+      <span class="card-foot">
+        ${avatars(item.team)}
+        <span class="team-note">${item.team.length === 1 ? "Solo entry" : item.team.length + " people"}</span>
+      </span>
+    </button>`;
+  }
+
+  function renderGallery() {
+    const all = publicEntries();
+    const shown = state.filter === "All" ? all : all.filter(d => d.bu === state.filter);
+
+    // meta row
+    const byBu = BUS.filter(b => all.some(d => d.bu === b)).length;
+    $("meta-row").innerHTML = [
+      ["Entries in the gallery", all.length],
+      ["Functions represented", byBu + " of 4"],
+      ["Stage", PHASES[state.phase].label.split(" — ")[0]]
+    ].map(([k, v]) => `<div class="meta"><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+
+    // phase bar
+    const ph = PHASES[state.phase];
+    $("phase-bar").innerHTML =
+      `<span class="phase-dot"></span><strong>${ph.label}.</strong> <span style="color:var(--text-muted)">${ph.note}</span>
+       <span class="spacer"></span><span class="deadline">${ph.deadline}</span>`;
+
+    // hero call to action — the whole point of the site
+    $("hero-cta").innerHTML = canSubmit()
+      ? `<button type="button" class="btn btn-primary" data-go-submit>${ctaLabel()}</button>
+         <button type="button" class="btn btn-ghost" data-go-grid>Browse the gallery ↓</button>
+         ${hasEntry()
+            ? `<span class="entry-status">Your entry <strong>Leave Triage</strong> is awaiting review.</span>`
+            : ""}`
+      : `<button type="button" class="btn btn-ghost" data-go-grid>Browse the gallery ↓</button>
+         <span class="entry-status">Submissions closed on 9 October.</span>`;
+
+    // closing band — catches anyone who scrolled the whole grid
+    const bandFx = `<div class="band-fx" aria-hidden="true">
+        <span class="orb orb-a" data-speed="0.30"></span>
+        <span class="orb orb-b" data-speed="-0.24"></span>
+      </div>`;
+    $("cta-band").innerHTML = bandFx + (canSubmit()
+      ? `<div class="copy">
+           <span class="eyebrow">Your turn</span>
+           <h2>${hasEntry() ? "Want to change something?" : "Bring one task from your function."}</h2>
+           <p>${hasEntry()
+                ? "You can edit every part of your entry until submissions close on 9 October."
+                : "It does not have to be complicated — just something your team does often enough to be worth automating."}</p>
+         </div>
+         <button type="button" class="btn btn-primary" data-go-submit>${ctaLabel()}</button>`
+      : `<div class="copy">
+           <span class="eyebrow">Submissions closed</span>
+           <h2>That's a wrap on entries.</h2>
+           <p>${state.phase === "judging"
+                ? "Judging is under way. Results are announced on 16 October."
+                : "Thank you to everyone who built something. Awards are published above."}</p>
+         </div>
+         <button type="button" class="btn btn-primary" disabled>Submissions closed</button>`);
+
+    // winners band — renders only when at least one award exists and is visible
+    const winners = awardsVisible() ? all.filter(d => d.award) : [];
+    const slot = $("winners-slot");
+    if (winners.length) {
+      slot.innerHTML = `<div class="winners-band">
+        <div class="band-fx" aria-hidden="true"><span class="orb orb-a" data-speed="0.34"></span></div>
+        <div class="section-head">
+          <h2>Awarded</h2>
+          <span class="count">${winners.length} of ${all.length} entries</span>
+        </div>
+        <div class="grid">${winners.map(cardHTML).join("")}</div>
+      </div>`;
+    } else {
+      slot.innerHTML = "";
+    }
+
+    // filters
+    $("filters").innerHTML = ["All", ...BUS].map(b => {
+      const n = b === "All" ? all.length : all.filter(d => d.bu === b).length;
+      return `<button type="button" class="chip" data-bu="${b}" aria-pressed="${state.filter === b}">${b}${n ? ` · ${n}` : ""}</button>`;
+    }).join("");
+
+    // grid
+    $("grid-heading").textContent = winners.length ? "Every entry" : "All submissions";
+    $("grid-count").textContent = shown.length
+      ? `Showing ${shown.length} of ${all.length}`
+      : "";
+    $("grid").innerHTML = shown.map(cardHTML).join("");
+    $("grid").hidden = shown.length === 0;
+    $("empty").hidden = shown.length !== 0;
+  }
+
+  const PREFILL = {
+    "f-title": "Leave Triage",
+    "f-tagline": "Reads leave requests against team coverage rules and surfaces only the clashes that need a manager's call.",
+    "f-team": "Nurul Izzati, Danial Hakim",
+    "f-problem": "Managers approve leave without visibility of who else on the team is already out that week, so clashes are only caught after the fact.",
+    "f-how": "Pulls the team roster and approved leave for the requested dates, applies the coverage rule for the function, then either clears the request or routes it to the manager with the clash spelled out.",
+    "f-demo": "https://teams.microsoft.com/..."
+  };
+  const PLACEHOLDERS = {
+    "f-title": "Policy Desk",
+    "f-tagline": "What it does, in one sentence.",
+    "f-team": "Start typing a colleague's name",
+    "f-problem": "What happens today, how often, and where it breaks.",
+    "f-how": "Include where a human still makes the call.",
+    "f-demo": "https://"
+  };
+
+  function renderSubmit() {
+    const locked = state.phase !== "open";
+    const ph = PHASES[state.phase];
+    const id = IDENTITIES[state.role];
+
+    $("f-submitter").value = `${id.name} — ${id.role}`;
+
+    // A first-time submitter gets an empty form; someone who already entered sees their entry.
+    Object.keys(PREFILL).forEach(k => {
+      $(k).value = hasEntry() ? PREFILL[k] : "";
+      $(k).placeholder = PLACEHOLDERS[k];
+    });
+
+    $("submit-phase-bar").innerHTML = locked
+      ? `<span class="phase-dot"></span><strong>Submissions are closed.</strong> <span style="color:var(--text-muted)">Your entry is locked and cannot be edited.</span><span class="spacer"></span><span class="deadline">${ph.deadline}</span>`
+      : hasEntry()
+        ? `<span class="phase-dot"></span><strong>Submitted · awaiting review.</strong> <span style="color:var(--text-muted)">You can keep editing until submissions close.</span><span class="spacer"></span><span class="deadline">${ph.deadline}</span>`
+        : `<span class="phase-dot"></span><strong>Nothing submitted yet.</strong> <span style="color:var(--text-muted)">Fill this in and you are on the board.</span><span class="spacer"></span><span class="deadline">${ph.deadline}</span>`;
+
+    $("submission-form").querySelectorAll("input, textarea, select").forEach(el => {
+      if (el.id !== "f-submitter") el.disabled = locked;
+    });
+    $("btn-submit").disabled = locked;
+    $("btn-submit").textContent = hasEntry() ? "Save changes" : "Submit entry";
+    $("btn-draft").disabled = locked;
+    $("btn-draft").hidden = hasEntry();
+    $("submit-note").textContent = locked
+      ? "Contact Group IT if you need a change after the deadline."
+      : "Nothing is saved in this prototype.";
+  }
+
+  function renderAdmin() {
+    const counts = ["submitted", "approved", "rejected", "draft"]
+      .map(s => [s, DATA.filter(d => d.status === s).length]);
+    $("admin-meta").innerHTML = counts.map(([k, v]) =>
+      `<div class="meta"><dt>${k === "submitted" ? "Awaiting review" : k}</dt><dd>${v}</dd></div>`).join("");
+
+    $("admin-rows").innerHTML = DATA.map(d => {
+      const canAward = state.phase !== "open";
+      return `<tr>
+        <td><div class="t-title">${d.title}</div><div class="t-sub">${d.team.map(m => m[0]).join(", ")}</div></td>
+        <td style="font-size:13px;color:var(--text-muted)">${d.bu}</td>
+        <td><span class="pill p-${d.status}">${d.status === "submitted" ? "Awaiting review" : d.status.charAt(0).toUpperCase() + d.status.slice(1)}</span></td>
+        <td style="font-size:13px;color:var(--text-muted)">${d.award ? (d.award === "winner" ? "Winner" : "Runner-up") : "—"}</td>
+        <td><div class="row-actions">
+          ${d.status === "submitted"
+            ? `<button type="button" class="btn btn-primary btn-sm">Approve</button><button type="button" class="btn btn-ghost btn-sm">Send back</button>`
+            : d.status === "approved"
+              ? `<button type="button" class="btn btn-ghost btn-sm"${canAward ? "" : " disabled"}>${d.award ? "Change award" : "Mark award"}</button>`
+              : `<button type="button" class="btn btn-ghost btn-sm">Reopen</button>`}
+        </div></td>
+      </tr>`;
+    }).join("");
+  }
+
+  const IDENTITIES = {
+    new:     { name: "Chong Mei Ling", initials: "CM", role: "Group Operations" },
+    entered: { name: "Nurul Izzati",   initials: "NI", role: "Group Human Resources" },
+    admin:   { name: "Rajesh Kumar",   initials: "RK", role: "Group IT · Organiser" }
+  };
+
+  // Every OSKer can submit. The only real difference is whether they already have an entry.
+  const hasEntry = () => state.role === "entered";
+  const canSubmit = () => state.phase === "open";
+  const ctaLabel = () => hasEntry() ? "Edit your entry ↗" : "Submit your agent ↗";
+
+  function renderChrome() {
+    const id = IDENTITIES[state.role];
+    $("who").innerHTML = `<span class="avatar">${id.initials}</span><span><strong>${id.name}</strong><br>${id.role}</span>`;
+
+    $("nav").querySelectorAll("button").forEach(b => {
+      const v = b.dataset.view;
+      b.hidden = (v === "admin" && state.role !== "admin");
+      b.textContent = v === "submit" ? (hasEntry() ? "My submission" : "Submit") : b.textContent;
+      b.setAttribute("aria-current", v === state.view ? "page" : "false");
+    });
+
+    // The primary action stays reachable from every scroll position.
+    const hc = $("header-cta");
+    hc.hidden = !canSubmit() || state.view === "submit";
+    hc.textContent = ctaLabel();
+
+    ["gallery", "submit", "admin"].forEach(v => { $("view-" + v).hidden = v !== state.view; });
+  }
+
+  // ---------- Motion ----------
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // Parallax: every [data-speed] layer drifts against its own container as it
+  // crosses the viewport. One rAF-throttled pass, transforms only.
+  let queued = false;
+  function parallax() {
+    queued = false;
+    if (reduced.matches) return;
+    const vh = window.innerHeight || 800;
+    document.querySelectorAll("[data-speed]").forEach(el => {
+      const host = el.parentElement;
+      if (!host) return;
+      const r = host.getBoundingClientRect();
+      if (r.bottom < -240 || r.top > vh + 240) return;
+      const progress = (r.top + r.height / 2 - vh / 2) / vh;
+      const shift = progress * parseFloat(el.dataset.speed) * 110;
+      el.style.transform = `translate3d(0, ${shift.toFixed(1)}px, 0)`;
+    });
+  }
+  function onScroll() {
+    if (!queued) { queued = true; requestAnimationFrame(parallax); }
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  document.addEventListener("scroll", onScroll, { passive: true, capture: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  reduced.addEventListener("change", () => {
+    if (reduced.matches) {
+      document.querySelectorAll("[data-speed]").forEach(el => { el.style.transform = ""; });
+    } else parallax();
+  });
+
+  function paint() {
+    // only the review queue is role-gated; anyone signed in may submit
+    if (state.view === "admin" && state.role !== "admin") state.view = "gallery";
+    renderChrome();
+    if (state.view === "gallery") renderGallery();
+    if (state.view === "submit") renderSubmit();
+    if (state.view === "admin") renderAdmin();
+    parallax();
+  }
+
+  // Cross-fade between views where the browser supports it, straight swap where it doesn't.
+  function renderAll() {
+    if (document.startViewTransition && !reduced.matches) {
+      document.startViewTransition(() => paint());
+    } else {
+      paint();
+    }
+  }
+
+  // ---------- Events ----------
+  $("role-seg").addEventListener("click", e => {
+    const b = e.target.closest("button[data-role]"); if (!b) return;
+    state.role = b.dataset.role;
+    $("role-seg").querySelectorAll("button").forEach(x =>
+      x.setAttribute("aria-pressed", String(x === b)));
+    state.view = "gallery";
+    renderAll();
+  });
+
+  // Every submit entry point on the page routes here.
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-go-submit]")) {
+      window.scrollTo(0, 0);   // land at the top before the view transition snapshots
+      state.view = "submit";
+      renderAll();
+    }
+    if (e.target.closest("[data-go-grid]")) {
+      $("grid-heading").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+
+  $("phase-seg").addEventListener("click", e => {
+    const b = e.target.closest("button[data-phase]"); if (!b) return;
+    state.phase = b.dataset.phase;
+    $("phase-seg").querySelectorAll("button").forEach(x =>
+      x.setAttribute("aria-pressed", String(x === b)));
+    renderAll();
+  });
+
+  $("nav").addEventListener("click", e => {
+    const b = e.target.closest("button[data-view]"); if (!b) return;
+    state.view = b.dataset.view;
+    renderAll();
+  });
+
+  $("filters").addEventListener("click", e => {
+    const b = e.target.closest("button[data-bu]"); if (!b) return;
+    state.filter = b.dataset.bu;
+    renderGallery();   // no view transition — the cards re-stagger instead
+    parallax();
+  });
+
+  $("grid").addEventListener("click", e => openDetail(e));
+  $("winners-slot").addEventListener("click", e => openDetail(e));
+
+  function openDetail(e) {
+    const c = e.target.closest(".card[data-id]"); if (!c) return;
+    const d = DATA.find(x => x.id === c.dataset.id); if (!d) return;
+    $("d-bu").textContent = d.bu;
+    $("d-title").textContent = d.title;
+    $("d-tagline").textContent = d.tagline;
+    $("d-problem").textContent = d.problem;
+    $("d-how").textContent = d.how;
+    $("d-team").textContent = d.team.map(m => m[0]).join(", ");
+    $("detail").showModal();
+  }
+  $("d-close").addEventListener("click", () => $("detail").close());
+
+  ["btn-submit", "btn-draft"].forEach(id => $(id).addEventListener("click", () => {
+    $("submit-note").textContent = "Prototype — nothing was saved.";
+  }));
+
+  // redraw thumbnails when the theme flips
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paint);
+
+  paint();          // first paint goes straight in, no transition
+  parallax();
+})();
+</script>
+</body>
+</html>
